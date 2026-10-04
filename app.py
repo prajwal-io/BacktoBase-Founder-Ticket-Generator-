@@ -1,3 +1,35 @@
+    "photo_bytes": None,
+    "zoom": 1.0,
+    "photo_x": 0,
+    "photo_y": 0,
+    "font_name": "Montserrat",
+    "font_size": 36,
+    "font_weight": "Semi Bold",
+    "text_case": "As Typed",
+    "letter_spacing": 0,
+    "alignment": "Left",
+    "font_color_name": "Navy",
+    "auto_fit": True,
+    "export_format": "PNG",
+    "uploader_key": 0,
+}.items():
+    ensure(k, v)
+
+st.markdown(
+    """
+<div class="brand-wrap">
+  <div class="eyebrow">NAME OF THE COMMUNITY</div>
+  <div class="brand"><span>Backto</span>Base</div>
+  <div class="event-title">Founders Investors Connect</div>
+  <div class="tagline">Meet · Network · Build the Future</div>
+  <div class="step-line"><b>01</b> Enter your name &nbsp;&nbsp; <b>02</b> Attach your photo &nbsp;&nbsp; <b>03</b> Adjust your ticket &nbsp;&nbsp; <b>04</b> Download</div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+left, right = st.columns([0.36, 0.64], gap="large")
+
 with left:
     with st.container(border=True):
         st.markdown('<div class="section-kicker">PARTICIPANT</div>', unsafe_allow_html=True)
