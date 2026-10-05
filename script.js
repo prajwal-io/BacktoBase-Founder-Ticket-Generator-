@@ -94,18 +94,10 @@ function initIntro() {
   const replayBtn = $('replay-intro-btn');
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Replay must work even when the intro was already played this session
+  // The intro plays on every load / refresh — replay simply restarts it
   replayBtn.addEventListener('click', () => {
-    sessionStorage.removeItem('btb-intro-played');
     location.reload();
   });
-
-  // Already played this session — show the app immediately
-  if (sessionStorage.getItem('btb-intro-played')) {
-    introOverlay.classList.add('hidden');
-    appEl.classList.add('visible');
-    return;
-  }
 
   skipBtn.addEventListener('click', finishIntro);
 
@@ -170,13 +162,91 @@ function initIntro() {
     introFinished = true;
     clearTimeout(introTimer);
     introOverlay.classList.add('intro-exit');
-    sessionStorage.setItem('btb-intro-played', '1');
     setTimeout(() => {
       introAnimating = false;
       introOverlay.classList.add('hidden');
       appEl.classList.add('visible');
     }, REDUCED ? 450 : 950);
   }
+}
+
+// ===================================================
+//  AMBIENT STARFIELD (page-wide subtle glow)
+// ===================================================
+function initAmbientStars() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const canvas = $('ambient-stars');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+  let stars = [];
+  let running = true;
+
+  // Pre-rendered soft glow sprites (cheap: one drawImage per star per frame)
+  function makeSprite(rgb) {
+    const s = 64;
+    const c = document.createElement('canvas');
+    c.width = c.height = s;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    grad.addColorStop(0, 'rgba(255,253,247,1)');
+    grad.addColorStop(0.22, `rgba(${rgb},0.85)`);
+    grad.addColorStop(0.55, `rgba(${rgb},0.22)`);
+    grad.addColorStop(1, `rgba(${rgb},0)`);
+    g.fillStyle = grad;
+    g.fillRect(0, 0, s, s);
+    return c;
+  }
+  const sprites = [makeSprite('216,178,90'), makeSprite('232,213,163')];
+
+  function build() {
+    const count = Math.round(Math.min(90, Math.max(36, (window.innerWidth * window.innerHeight) / 24000)));
+    stars = [];
+    for (let i = 0; i < count; i++) {
+      const hero = Math.random() < 0.12;
+      stars.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        size: hero ? 2.6 + Math.random() * 0.9 : 0.8 + Math.random() * 1.6,
+        base: 0.3 + Math.random() * 0.45,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.6 + Math.random() * 1.4,
+        drift: 0.05 + Math.random() * 0.2,
+        sprite: sprites[(Math.random() * sprites.length) | 0],
+      });
+    }
+  }
+
+  function resize() {
+    canvas.width = Math.round(window.innerWidth * DPR);
+    canvas.height = Math.round(window.innerHeight * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    build();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { running = false; }
+    else if (!running) { running = true; requestAnimationFrame(tick); }
+  });
+
+  function tick(now) {
+    if (!running) return;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (const s of stars) {
+      s.y -= s.drift;
+      s.x += Math.sin(s.y * 0.01 + s.phase) * 0.15;
+      if (s.y < -20) { s.y = window.innerHeight + 20; s.x = Math.random() * window.innerWidth; }
+      const tw = 0.5 + 0.5 * Math.sin(now * 0.001 * s.speed + s.phase);
+      const glow = s.size * 7;
+      ctx.globalAlpha = s.base * (0.35 + 0.65 * tw);
+      ctx.drawImage(s.sprite, s.x - glow / 2, s.y - glow / 2, glow, glow);
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // ===================================================
@@ -876,6 +946,7 @@ async function init() {
 
   initIntro();
   initEvents();
+  initAmbientStars();
 
   try {
     await preloadFonts();
