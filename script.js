@@ -92,6 +92,7 @@ const ticketRetryBtn  = $('ticket-retry-btn');
 function initIntro() {
   const skipBtn   = $('intro-skip-btn');
   const replayBtn = $('replay-intro-btn');
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Replay must work even when the intro was already played this session
   replayBtn.addEventListener('click', () => {
@@ -108,21 +109,23 @@ function initIntro() {
 
   skipBtn.addEventListener('click', finishIntro);
 
-  // Gold dust particles
+  // Gold dust particles (DPR-aware canvas, CSS-px coordinates)
+  const DPR_INTRO = Math.min(window.devicePixelRatio || 1, 2);
   const particleCanvas = $('intro-particles');
   const pCtx = particleCanvas.getContext('2d');
   let particles = [];
   let introAnimating = true;
 
   function resizeParticles() {
-    particleCanvas.width = window.innerWidth;
-    particleCanvas.height = window.innerHeight;
+    particleCanvas.width = Math.round(window.innerWidth * DPR_INTRO);
+    particleCanvas.height = Math.round(window.innerHeight * DPR_INTRO);
+    pCtx.setTransform(DPR_INTRO, 0, 0, DPR_INTRO, 0, 0);
   }
   resizeParticles();
   window.addEventListener('resize', resizeParticles);
 
-  // Create particles
-  for (let i = 0; i < 40; i++) {
+  // Create particles (none for reduced motion — static frame instead)
+  for (let i = 0; i < (REDUCED ? 0 : 46); i++) {
     particles.push({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
@@ -130,17 +133,20 @@ function initIntro() {
       speed: 0.15 + Math.random() * 0.4,
       opacity: 0.15 + Math.random() * 0.35,
       blur: Math.random() > 0.6 ? 1 : 0,
+      tw: Math.random() * Math.PI * 2,
+      twSpeed: 0.4 + Math.random() * 1.2,
     });
   }
 
-  function animateParticles() {
+  function animateParticles(now) {
     if (!introAnimating) return;
-    pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+    pCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     for (const p of particles) {
       p.y -= p.speed;
       p.x += Math.sin(p.y * 0.008) * 0.3;
-      if (p.y < -10) { p.y = particleCanvas.height + 10; p.x = Math.random() * particleCanvas.width; }
-      pCtx.globalAlpha = p.opacity;
+      if (p.y < -10) { p.y = window.innerHeight + 10; p.x = Math.random() * window.innerWidth; }
+      const twinkle = 0.55 + 0.45 * Math.sin(now * 0.001 * p.twSpeed + p.tw);
+      pCtx.globalAlpha = p.opacity * twinkle;
       pCtx.fillStyle = '#D9B15A';
       if (p.blur) { pCtx.filter = 'blur(1px)'; }
       pCtx.beginPath();
@@ -153,8 +159,9 @@ function initIntro() {
   }
   requestAnimationFrame(animateParticles);
 
-  // Auto-dismiss after 5s
-  const introDuration = 5000;
+  // Auto-dismiss once the choreography has played through
+  // (fast path for reduced motion: static frame, then straight to the app)
+  const introDuration = REDUCED ? 500 : 3600;
   let introFinished = false;
   const introTimer = setTimeout(finishIntro, introDuration);
 
@@ -168,7 +175,7 @@ function initIntro() {
       introAnimating = false;
       introOverlay.classList.add('hidden');
       appEl.classList.add('visible');
-    }, 1200);
+    }, REDUCED ? 450 : 950);
   }
 }
 
