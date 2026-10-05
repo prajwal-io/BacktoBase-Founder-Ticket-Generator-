@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket Generator — BacktoBase Founders Investors Connect</title>
+  <meta name="description" content="Generate personalized tickets for BacktoBase's Founders Investors Connect event. Add your name and photo to create a downloadable ticket.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Cormorant+Garamond:wght@400;600;700&family=DM+Serif+Display&family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== INTRO OVERLAY ===== -->
+  <div id="intro-overlay">
+    <div class="intro-bg"></div>
+    <div class="intro-grain"></div>
+    <div class="intro-vignette"></div>
+    <canvas id="intro-particles"></canvas>
+    <div class="intro-hairline"></div>
+    <div class="intro-sweep sweep-1"></div>
+    <div class="intro-sweep sweep-2"></div>
+    <div class="intro-wordmark-wrap">
+      <div class="intro-wordmark">
+        <span class="gold-text">Backto</span><span class="cream-text">Base</span>
+      </div>
+      <div class="intro-tagline">Meet &nbsp;/&nbsp; Network &nbsp;/&nbsp; Build the Future</div>
+      <div class="intro-tagline-line"></div>
+    </div>
+    <button class="intro-skip" id="intro-skip-btn" aria-label="Skip intro animation">Skip</button>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="app">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <div class="topbar-logo">
+          <span class="gold-text">Backto</span><span class="navy-text">Base</span>
+        </div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-event">Founders Investors Connect</div>
+      </div>
+      <button class="topbar-replay" id="replay-intro-btn" aria-label="Replay intro animation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+        Replay Intro
+      </button>
+    </header>
+
+    <main class="app-main">
+      <!-- Left: Controls -->
+      <aside class="controls-panel">
+
+        <!-- 1. Participant -->
+        <section class="panel-card" id="section-participant">
+          <div class="panel-heading">Participant</div>
+
+          <div class="form-group">
+            <label class="form-label" for="name-input">
+              Participant Name
+              <span class="char-counter" id="char-counter">0/40</span>
+            </label>
+            <input type="text" class="text-input" id="name-input" maxlength="40" autocomplete="off" aria-label="Participant name">
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Photo</div>
+
+            <!-- Drop zone (shown when no photo) -->
+            <div class="photo-drop-zone" id="photo-drop-zone">
+              <svg class="photo-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <div class="photo-drop-label">Choose Photo or Drag Here</div>
+              <div class="photo-drop-hint">JPG, PNG, WebP</div>
+              <input type="file" class="photo-file-input" id="photo-file-input" accept="image/jpeg,image/png,image/webp,image/heic">
+            </div>
+
+            <!-- Photo editor (shown when photo loaded) -->
+            <div class="photo-editor" id="photo-editor">
+              <!-- .photo-circle-wrapper = decorative rings + drag surface (no clipping) -->
+              <div class="photo-preview-circle photo-circle-wrapper" id="photo-circle">
+                <!-- .photo-circle-mask = the single strict circular clipping container -->
+                <div class="photo-circle-mask" id="photo-circle-mask">
+                  <img id="photo-circle-img" alt="Participant photo preview" draggable="false">
+                </div>
+              </div>
+              <div class="photo-controls-row">
+                <span class="photo-zoom-label">Zoom</span>
+                <input type="range" class="range-slider" id="photo-zoom" min="100" max="300" value="100" aria-label="Photo zoom">
+              </div>
+              <div class="photo-actions">
+                <button class="btn-sm" id="photo-replace-btn">Replace</button>
+                <button class="btn-sm" id="photo-remove-btn">Remove</button>
+              </div>
+            </div>
+
+            <div class="error-msg" id="photo-error" role="alert">
+              <span id="photo-error-text"></span>
+              <button class="error-retry" id="photo-retry-btn">Retry</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Typography -->
+        <section class="panel-card" id="section-typography">
+          <div class="panel-heading-row">
+            <div class="panel-heading">Typography</div>
+            <button class="reset-link" id="reset-style-btn">Reset style</button>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Font Family</div>
+            <div class="font-chips" id="font-chips">
+              <button class="font-chip active" data-font="Montserrat" style="font-family:'Montserrat',sans-serif">
+                <div class="font-chip-name">Montserrat</div>
+                <div class="font-chip-label">Default Sans</div>
+              </button>
+              <button class="font-chip" data-font="Playfair Display" style="font-family:'Playfair Display',serif">
+                <div class="font-chip-name">Playfair</div>
+                <div class="font-chip-label">Editorial Serif</div>
+              </button>
+              <button class="font-chip" data-font="Poppins" style="font-family:'Poppins',sans-serif">
+                <div class="font-chip-name">Poppins</div>
+                <div class="font-chip-label">Clean Geometric</div>
+              </button>
+              <button class="font-chip" data-font="DM Serif Display" style="font-family:'DM Serif Display',serif">
+                <div class="font-chip-name" style="font-family:'DM Serif Display',serif">DM Serif</div>
+                <div class="font-chip-label">Classic Title</div>
+              </button>
+              <button class="font-chip" data-font="Caveat" style="font-family:'Caveat',cursive">
+                <div class="font-chip-name">Caveat</div>
+                <div class="font-chip-label">Handwritten</div>
+              </button>
+              <button class="font-chip" data-font="Cormorant Garamond" style="font-family:'Cormorant Garamond',serif">
+                <div class="font-chip-name">Cormorant</div>
+                <div class="font-chip-label">Refined Luxury</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="inline-row">
+            <div class="inline-col">
+              <div class="form-label">Weight</div>
+              <div class="toggle-row" id="weight-toggles">
+                <button class="toggle-chip" data-weight="400">Regular</button>
+                <button class="toggle-chip" data-weight="500">Medium</button>
+                <button class="toggle-chip active" data-weight="700">Bold</button>
+              </div>
+            </div>
+            <div class="inline-col">
+              <div class="form-label">Text Case</div>
+              <div class="toggle-row" id="case-toggles">
+                <button class="toggle-chip active" data-case="none">Typed</button>
+                <button class="toggle-chip" data-case="uppercase">UPPER</button>
+                <button class="toggle-chip" data-case="capitalize">Title</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Letter Spacing</div>
+            <div class="photo-controls-row">
+              <input type="range" class="range-slider" id="letter-spacing-slider" min="-2" max="12" value="0" step="0.5" aria-label="Letter spacing">
+              <span class="quality-value" id="spacing-value">0</span>
+            </div>
+          </div>
+
+          <div class="inline-row">
+            <div class="inline-col">
+              <div class="form-label">Alignment</div>
+              <div class="toggle-row" id="align-toggles">
+                <button class="toggle-chip active" data-align="left">Left</button>
+                <button class="toggle-chip" data-align="center">Center</button>
+              </div>
+            </div>
+            <div class="inline-col">
+              <div class="form-label">Size</div>
+              <div class="size-slider-row">
+                <input type="range" class="range-slider" id="size-slider" min="16" max="72" value="36" aria-label="Font size">
+                <span class="size-value" id="size-value">36</span>
+              </div>
+              <label class="autofit-toggle" style="margin-top:6px">
+                <input type="checkbox" class="autofit-checkbox" id="autofit-toggle" checked>
+                Auto-fit
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Color</div>
+            <div class="swatch-row" id="color-swatches">
+              <button class="swatch active" data-color="#0B2447" style="background:#0B2447" title="Navy" aria-label="Navy color"></button>
+              <button class="swatch" data-color="#B8892B" style="background:#B8892B" title="Gold" aria-label="Gold color"></button>
+              <button class="swatch" data-color="#8A6422" style="background:#8A6422" title="Deep Gold" aria-label="Deep gold color"></button>
+              <div class="swatch-custom" title="Custom color" aria-label="Custom color picker">
+                <input type="color" id="custom-color-input" value="#0B2447">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Download -->
+        <section class="panel-card" id="section-download">
+          <div class="panel-heading">Download</div>
+
+          <div class="format-segmented" id="format-segmented">
+            <button class="format-btn active" data-format="png">PNG</button>
+            <button class="format-btn" data-format="jpeg">JPEG</button>
+            <button class="format-btn" data-format="webp">WebP</button>
+            <button class="format-btn" data-format="pdf">PDF</button>
+          </div>
+
+          <div class="quality-slider-wrap" id="quality-wrap">
+            <span class="quality-label">Quality</span>
+            <input type="range" class="range-slider" id="quality-slider" min="10" max="100" value="92" aria-label="JPEG quality">
+            <span class="quality-value" id="quality-value">92%</span>
+          </div>
+
+          <button class="btn-download" id="download-btn" disabled>Download Ticket</button>
+          <div class="download-status" id="download-status" aria-live="polite"></div>
+        </section>
+
+      </aside>
+
+      <!-- Right: Preview -->
+      <div class="preview-stage">
+        <div class="preview-wrap">
+          <canvas id="preview-canvas" aria-label="Ticket preview"></canvas>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Ticket image error -->
+  <div class="error-msg" id="ticket-error" role="alert" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;padding:24px;font-size:1rem;">
+    <span id="ticket-error-text">Failed to load ticket image.</span>
+    <button class="error-retry" id="ticket-retry-btn" style="font-size:0.8rem;padding:6px 16px;">Retry</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
